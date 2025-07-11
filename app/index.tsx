@@ -47,6 +47,7 @@ export default function SplashScreen() {
   return (
     <LinearGradient
       colors={[ '#000', '#000','#f1c40f']}
+
       style={styles.container}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
@@ -60,7 +61,7 @@ export default function SplashScreen() {
           transform: [{ scale: scaleAnim }]
         }
       ]}>
-        
+
         {/* Title */}
         <Text style={styles.title}>CineVault</Text>
         
@@ -108,6 +109,35 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+  },
+
+
+  circle1: {
+    position: 'absolute',
+    top: height * 0.15,
+    left: width * 0.1,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  circle2: {
+    position: 'absolute',
+    top: height * 0.7,
+    right: width * 0.15,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  circle3: {
+    position: 'absolute',
+    bottom: height * 0.2,
+    left: width * 0.2,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   content: {
     alignItems: 'center',

@@ -235,7 +235,11 @@ export default function DetailPage() {
 
         {/* Box Office Section */}
         <View style={styles.boxOfficeSection}>
+
           <Text style={styles.boxOfficeLabel}>| BOX OFFICE</Text>
+
+          <Text style={styles.boxOfficeLabel}>BOX OFFICE</Text>
+
           <Text style={styles.boxOfficeValue}>{movie.BoxOffice || 'Not Available'}</Text>
         </View>
 

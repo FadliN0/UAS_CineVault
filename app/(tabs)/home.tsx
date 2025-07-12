@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   Image,
   Alert,
-  Animated
+  Animated,
+  RefreshControl,
+  ScrollView
 } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'expo-router';
@@ -60,7 +62,7 @@ const SkeletonMovieCard = () => {
 // Skeleton Loading List
 const SkeletonLoadingList = () => (
   <View style={styles.list}>
-    {[1, 2, 3, 4, 5].map((item) => (
+    {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
       <SkeletonMovieCard key={item} />
     ))}
   </View>
@@ -70,32 +72,65 @@ export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [lastSearchQuery, setLastSearchQuery] = useState('');
   const router = useRouter();
 
-  const onGetData = async () => {
-    if (!searchQuery.trim()) return;
+  const onGetData = async (isRefresh = false, queryToSearch = '') => {
+    const searchTerm = queryToSearch || searchQuery;
+    
+    if (!searchTerm.trim()) return;
 
-    setLoading(true);
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+
     try {
       const response = await axios.get(
-        `http://www.omdbapi.com/?apikey=b45dad4f&s=${searchQuery}`
+        `http://www.omdbapi.com/?apikey=b45dad4f&s=${searchTerm}`
       );
 
       if (response.data.Response === 'True') {
         setMovies(response.data.Search);
+        setLastSearchQuery(searchTerm);
       } else {
         setMovies([]);
-        Alert.alert('Info', response.data.Error || 'Film tidak ditemukan');
+        if (!isRefresh) {
+          Alert.alert('Info', response.data.Error || 'Film tidak ditemukan');
+        }
       }
       setSearched(true);
     } catch (error) {
       const err = error as Error;
       const message = err?.message || 'Gagal mengambil data';
-      Alert.alert('Error', message);
+      
+      if (!isRefresh) {
+        Alert.alert('Error', message);
+      }
       setMovies([]);
     } finally {
-      setLoading(false);
+      if (isRefresh) {
+        setRefreshing(false);
+      } else {
+        setLoading(false);
+      }
+    }
+  };
+
+  const onRefresh = () => {
+    // Set refreshing to true immediately to show skeleton
+    setRefreshing(true);
+    
+    if (lastSearchQuery.trim()) {
+      onGetData(true, lastSearchQuery);
+    } else if (searchQuery.trim()) {
+      onGetData(true, searchQuery);
+    } else {
+      // If no search query, just stop refreshing
+      setRefreshing(false);
     }
   };
 
@@ -132,62 +167,139 @@ export default function HomeScreen() {
     );
   };
 
+  const renderContent = () => {
+    // Skeleton Loading - show skeleton during refresh or initial loading
+    if (loading || refreshing) {
+      return (
+        <ScrollView 
+          style={styles.scrollContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#f1c40f']}
+              tintColor={'#f1c40f'}
+              title="Pull to refresh"
+              titleColor={'#f1c40f'}
+            />
+          }
+        >
+          <SkeletonLoadingList />
+        </ScrollView>
+      );
+    }
+
+    // Empty Search State
+    if (!loading && !searched) {
+      return (
+        <ScrollView 
+          style={styles.scrollContainer}
+          contentContainerStyle={styles.emptyScrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#f1c40f']}
+              tintColor={'#f1c40f'}
+              title="Pull to refresh"
+              titleColor={'#f1c40f'}
+            />
+          }
+        >
+          <View style={styles.emptyContainer}>
+            <Ionicons name="film-outline" size={64} color="#7f8c8d" style={{ marginBottom: 20 }} />
+            <Text style={styles.emptyTitle}>Temukan Film Favoritmu</Text>
+            <Text style={styles.emptySubtitle}>Mulai cari judul film, serial, atau episode di atas.</Text>
+          </View>
+        </ScrollView>
+      );
+    }
+
+    // No Result State
+    if (!loading && searched && movies.length === 0) {
+      return (
+        <ScrollView 
+          style={styles.scrollContainer}
+          contentContainerStyle={styles.emptyScrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#f1c40f']}
+              tintColor={'#f1c40f'}
+              title="Pull to refresh"
+              titleColor={'#f1c40f'}
+            />
+          }
+        >
+          <View style={styles.emptyContainer}>
+            <Ionicons name="film-outline" size={64} color="#7f8c8d" style={{ marginBottom: 20 }} />
+            <Text style={styles.emptyNotFoundText}>Movie not found!</Text>
+            <Text style={styles.emptySubtitle}>Try searching with different keywords.</Text>
+          </View>
+        </ScrollView>
+      );
+    }
+
+    // Movies List
+    return (
+      <FlatList
+        data={movies}
+        renderItem={renderMovieCard}
+        keyExtractor={(item) => item.imdbID}
+        contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#f1c40f']}
+            tintColor={'#f1c40f'}
+            title="Pull to refresh"
+            titleColor={'#f1c40f'}
+          />
+        }
+      />
+    );
+  };
+
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.headerWrapper}>
-  <View style={styles.header}>
-    <Text style={styles.logo}>CineVault</Text>
-    {/* <View style={styles.avatar} /> */}
-  </View>
+        <View style={styles.header}>
+          <Text style={styles.logo}>CineVault</Text>
+        </View>
 
-  <View style={styles.searchWrapper}>
-    <Ionicons name="search" size={18} color="#2c3e50" style={{ marginLeft: 10 }} />
-    <TextInput
-      placeholder="Cari film..."
-      placeholderTextColor="#2c3e50"
-      value={searchQuery}
-      onChangeText={setSearchQuery}
-      onSubmitEditing={onGetData}
-      style={styles.searchInput}
-    />
-  </View>
+        <View style={styles.searchWrapper}>
+          <Ionicons name="search" size={18} color="#2c3e50" style={{ marginLeft: 10 }} />
+          <TextInput
+            placeholder="Cari film..."
+            placeholderTextColor="#2c3e50"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onSubmitEditing={() => onGetData(false)}
+            style={styles.searchInput}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity 
+              onPress={() => {
+                setSearchQuery('');
+                setMovies([]);
+                setSearched(false);
+                setLastSearchQuery('');
+              }}
+              style={styles.clearButton}
+            >
+              <Ionicons name="close-circle" size={18} color="#2c3e50" />
+            </TouchableOpacity>
+          )}
+        </View>
 
-  <View style={styles.separator} />
-</View>
+        <View style={styles.separator} />
+      </View>
 
-
-      {/* Skeleton Loading */}
-      {loading && <SkeletonLoadingList />}
-
-      {/* Empty Search */}
-      {!loading && !searched && (
-        <View style={styles.emptyContainer}>
-  <Ionicons name="film-outline" size={64} color="#7f8c8d" style={{ marginBottom: 20 }} />
-  <Text style={styles.emptyTitle}>Temukan Film Favoritmu</Text>
-  <Text style={styles.emptySubtitle}>Mulai cari judul film, serial, atau episode di atas.</Text>
-</View>
-
-      )}
-
-      {/* No Result */}
-      {!loading && searched && movies.length === 0 && (
-  <View style={styles.emptyContainer}>
-    <Ionicons name="film-outline" size={64} color="#7f8c8d" style={{ marginBottom: 20 }} />
-    <Text style={styles.emptyNotFoundText}>Movie not found!</Text>
-  </View>
-)}
-
-
-      {/* List Result */}
-      {!loading && movies.length > 0 && (
-        <FlatList
-          data={movies}
-          renderItem={renderMovieCard}
-          keyExtractor={(item) => item.imdbID}
-          contentContainerStyle={styles.list}
-        />
-      )}
+      {/* Content */}
+      {renderContent()}
     </View>
   );
 }
@@ -201,7 +313,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     marginBottom: 24,
   },
@@ -217,7 +329,12 @@ const styles = StyleSheet.create({
     borderColor: '#f1c40f',
     borderWidth: 2,
   },
-  // (Removed duplicate searchWrapper and searchInput)
+  scrollContainer: {
+    flex: 1,
+  },
+  emptyScrollContent: {
+    flexGrow: 1,
+  },
   list: {
     paddingBottom: 20,
   },
@@ -266,6 +383,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 20,
   },
   emptyText: {
     color: '#aaa',
@@ -301,45 +419,49 @@ const styles = StyleSheet.create({
     backgroundColor: '#2c2c2c',
   },
   headerWrapper: {
-  marginBottom: 24,
-},
-separator: {
-  height: 2,
-  backgroundColor: '#f1c40f',
-  marginTop: 12,
-  marginBottom: 8,
-  borderRadius: 1,
-},
-searchWrapper: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  backgroundColor: '#ffffff',
-  borderRadius: 8,
-  paddingHorizontal: 5,
-  paddingVertical: 10,
-  marginTop: 8,
-},
-searchInput: {
-  flex: 1,
-  color: '#2c3e50',
-  fontSize: 16,
-  marginLeft: 10,
-},
-emptyTitle: {
-  color: '#fff',
-  fontSize: 18,
-  fontWeight: 'bold',
-  marginBottom: 4,
-},
-emptySubtitle: {
-  color: '#aaa',
-  fontSize: 14,
-  textAlign: 'center',
-},
-emptyNotFoundText: {
-  color: '#fff',
-  fontSize: 16,
-  fontWeight: 'bold',
-},
-
+    marginBottom: 24,
+  },
+  separator: {
+    height: 2,
+    backgroundColor: '#f1c40f',
+    marginTop: 12,
+    marginBottom: 8,
+    borderRadius: 1,
+  },
+  searchWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    paddingHorizontal: 5,
+    paddingVertical: 10,
+    marginTop: 8,
+  },
+  searchInput: {
+    flex: 1,
+    color: '#2c3e50',
+    fontSize: 16,
+    marginLeft: 10,
+  },
+  clearButton: {
+    padding: 8,
+  },
+  emptyTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  emptySubtitle: {
+    color: '#aaa',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  emptyNotFoundText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
 });

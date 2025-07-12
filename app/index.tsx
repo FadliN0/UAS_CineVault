@@ -1,7 +1,7 @@
-import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
-import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, StyleSheet, Text, View } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -46,17 +46,12 @@ export default function SplashScreen() {
 
   return (
     <LinearGradient
-      colors={['#f39c12', '#e67e22', '#d35400']}
+      colors={[ '#000', '#000','#f1c40f']}
+
       style={styles.container}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
     >
-      {/* Background decorative elements */}
-      <View style={styles.backgroundElements}>
-        <Animated.View style={[styles.circle1, { opacity: fadeAnim }]} />
-        <Animated.View style={[styles.circle2, { opacity: fadeAnim }]} />
-        <Animated.View style={[styles.circle3, { opacity: fadeAnim }]} />
-      </View>
 
       {/* Main content */}
       <Animated.View style={[
@@ -66,9 +61,7 @@ export default function SplashScreen() {
           transform: [{ scale: scaleAnim }]
         }
       ]}>
-        {/* Movie icon */}
-        <Text style={styles.movieIcon}>🎬</Text>
-        
+
         {/* Title */}
         <Text style={styles.title}>CineVault</Text>
         
@@ -117,33 +110,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
-  circle1: {
-    position: 'absolute',
-    top: height * 0.15,
-    left: width * 0.1,
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  circle2: {
-    position: 'absolute',
-    top: height * 0.7,
-    right: width * 0.15,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  circle3: {
-    position: 'absolute',
-    bottom: height * 0.2,
-    left: width * 0.2,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  },
   content: {
     alignItems: 'center',
     maxWidth: 350,
@@ -156,7 +122,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 48,
     fontWeight: 'bold',
-    color: '#2c3e50',
+    color: '#f1c40f',
     marginBottom: 10,
     letterSpacing: 2,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
@@ -193,9 +159,9 @@ const styles = StyleSheet.create({
   },
   loadingBar: {
     height: '100%',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f1c40f',
     borderRadius: 4,
-    shadowColor: '#ffffff',
+    shadowColor: '#f1c40f',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6,
     shadowRadius: 8,

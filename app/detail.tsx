@@ -1,19 +1,19 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState, useRef } from 'react';
-import {
-  View,
-  Text,
-  Image,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  Animated
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
-
-const API_KEY = 'b45dad4f';
+import axios from 'axios';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import {
+  Animated,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  FlatList,
+  RefreshControl,
+  ActivityIndicator
+} from 'react-native';
 
 // Custom Skeleton Components
 const SkeletonBox = ({ width, height, style = {} }: { width: string | number, height: number, style?: any }) => {
@@ -56,7 +56,7 @@ const SkeletonBox = ({ width, height, style = {} }: { width: string | number, he
 
 const DetailSkeleton = () => {
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity>
@@ -64,65 +64,67 @@ const DetailSkeleton = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Top Section */}
-      <View style={styles.topCard}>
-        <SkeletonBox width={120} height={180} />
-        <View style={styles.meta}>
-          <SkeletonBox width="90%" height={20} style={{ marginBottom: 8 }} />
-          <SkeletonBox width="70%" height={16} style={{ marginBottom: 12 }} />
-          <SkeletonBox width="60%" height={16} style={{ marginBottom: 12 }} />
-          <View style={styles.genreRow}>
-            <SkeletonBox width={60} height={24} style={{ borderRadius: 12 }} />
-            <SkeletonBox width={80} height={24} style={{ borderRadius: 12 }} />
-            <SkeletonBox width={70} height={24} style={{ borderRadius: 12 }} />
+      {/* Skeleton Content */}
+      <View style={styles.skeletonContent}>
+        <View style={styles.topCard}>
+          <SkeletonBox width={120} height={180} />
+          <View style={styles.meta}>
+            <SkeletonBox width="90%" height={20} style={{ marginBottom: 8 }} />
+            <SkeletonBox width="70%" height={16} style={{ marginBottom: 12 }} />
+            <SkeletonBox width="60%" height={16} style={{ marginBottom: 12 }} />
+            <View style={styles.genreRow}>
+              <SkeletonBox width={60} height={24} style={{ borderRadius: 12 }} />
+              <SkeletonBox width={80} height={24} style={{ borderRadius: 12 }} />
+              <SkeletonBox width={70} height={24} style={{ borderRadius: 12 }} />
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* Plot Card */}
-      <View style={styles.card}>
-        <SkeletonBox width="100%" height={16} style={{ marginBottom: 6 }} />
-        <SkeletonBox width="100%" height={16} style={{ marginBottom: 6 }} />
-        <SkeletonBox width="100%" height={16} style={{ marginBottom: 6 }} />
-        <SkeletonBox width="80%" height={16} />
-      </View>
+        {/* Plot Card */}
+        <View style={styles.card}>
+          <SkeletonBox width="100%" height={16} style={{ marginBottom: 6 }} />
+          <SkeletonBox width="100%" height={16} style={{ marginBottom: 6 }} />
+          <SkeletonBox width="100%" height={16} style={{ marginBottom: 6 }} />
+          <SkeletonBox width="80%" height={16} />
+        </View>
 
-      {/* Info Card */}
-      <View style={styles.card}>
-        <SkeletonBox width="100%" height={16} style={{ marginBottom: 8 }} />
-        <SkeletonBox width="100%" height={16} style={{ marginBottom: 8 }} />
-        <SkeletonBox width="100%" height={16} />
-      </View>
+        {/* Info Card */}
+        <View style={styles.card}>
+          <SkeletonBox width="100%" height={16} style={{ marginBottom: 8 }} />
+          <SkeletonBox width="100%" height={16} style={{ marginBottom: 8 }} />
+          <SkeletonBox width="100%" height={16} />
+        </View>
 
-      {/* Box Office Card */}
-      <View style={styles.card}>
-        <SkeletonBox width="40%" height={16} style={{ marginBottom: 8 }} />
-        <SkeletonBox width="30%" height={18} />
-      </View>
+        {/* Box Office Card */}
+        <View style={styles.card}>
+          <SkeletonBox width="40%" height={16} style={{ marginBottom: 8 }} />
+          <SkeletonBox width="30%" height={18} />
+        </View>
 
-      {/* Score Card */}
-      <View style={styles.card}>
-        <View style={styles.scoreRow}>
-          <View style={styles.scoreBox}>
-            <SkeletonBox width={40} height={20} style={{ marginBottom: 8 }} />
-            <SkeletonBox width={80} height={12} />
-          </View>
-          <View style={styles.scoreBox}>
-            <SkeletonBox width={40} height={20} style={{ marginBottom: 8 }} />
-            <SkeletonBox width={80} height={12} />
-          </View>
-          <View style={styles.scoreBox}>
-            <SkeletonBox width={40} height={20} style={{ marginBottom: 8 }} />
-            <SkeletonBox width={80} height={12} />
+        {/* Score Card */}
+        <View style={styles.card}>
+          <View style={styles.scoreRow}>
+            <View style={styles.scoreBox}>
+              <SkeletonBox width={40} height={20} style={{ marginBottom: 8 }} />
+              <SkeletonBox width={80} height={12} />
+            </View>
+            <View style={styles.scoreBox}>
+              <SkeletonBox width={40} height={20} style={{ marginBottom: 8 }} />
+              <SkeletonBox width={80} height={12} />
+            </View>
+            <View style={styles.scoreBox}>
+              <SkeletonBox width={40} height={20} style={{ marginBottom: 8 }} />
+              <SkeletonBox width={80} height={12} />
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* Award Card */}
-      <View style={styles.awardSection}>
-        <SkeletonBox width="100%" height={16} />
+        {/* Award Card */}
+        <View style={styles.awardSection}>
+          <SkeletonBox width="100%" height={16} />
+        </View>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -131,55 +133,75 @@ export default function DetailPage() {
   const router = useRouter();
   const [movie, setMovie] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchDetail = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await axios.get(`http://www.omdbapi.com/?apikey=b45dad4f&i=${id}`);
+      
+      if (res.data.Response === 'True') {
+        setMovie(res.data);
+      } else {
+        setError(res.data.Error || 'Film tidak ditemukan');
+        setMovie(null);
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Gagal memuat data film. Silakan coba lagi.');
+      setMovie(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDetail = async () => {
-      try {
-        const res = await axios.get(`http://www.omdbapi.com/?apikey=${API_KEY}&i=${id}`);
-        setMovie(res.data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDetail();
   }, [id]);
 
-  if (loading) {
-    return <DetailSkeleton />;
-  }
+  // Pull to refresh handler - Reset everything and show skeleton
+  const onRefresh = useCallback(() => {
+    setMovie(null); // Clear current movie data
+    setError(null);  // Clear any error
+    fetchDetail();   // This will set loading to true and show skeleton
+  }, [id]);
 
-  if (!movie) {
-    return (
-      <View style={styles.loading}>
-        <Text style={{ color: '#fff' }}>Film tidak ditemukan</Text>
-      </View>
-    );
-  }
+  // Manual reload handler - Reset everything and show skeleton
+  const handleReload = () => {
+    setMovie(null); // Clear current movie data
+    setError(null);  // Clear any error
+    fetchDetail();   // This will set loading to true and show skeleton
+  };
 
-  const posterUri =
-    movie.Poster && movie.Poster !== 'N/A'
-      ? movie.Poster
-      : 'https://via.placeholder.com/400x600?text=No+Image';
-
-  const genres = movie.Genre?.split(',').map((genre: string) => genre.trim());
-  
   // Function to format names with dots
   const formatNames = (names: string) => {
     if (!names || names === 'N/A') return '-';
     return names.split(',').map(name => name.trim()).join(' • ');
   };
 
-  return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#f1c40f" />
-        </TouchableOpacity>
-      </View>
+  // Render header
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <TouchableOpacity onPress={() => router.back()}>
+        <Ionicons name="arrow-back" size={24} color="#f1c40f" />
+      </TouchableOpacity>
+    </View>
+  );
 
-      {/* Main Content Container with Full Gradient */}
+  // Render movie content
+  const renderMovieContent = () => {
+    if (!movie) return null;
+
+    const posterUri =
+      movie.Poster && movie.Poster !== 'N/A'
+        ? movie.Poster
+        : 'https://via.placeholder.com/400x600?text=No+Image';
+
+    const genres = movie.Genre?.split(',').map((genre: string) => genre.trim());
+
+    return (
       <LinearGradient
         colors={['#e0aa3e', '#000', '#000', '#000']}
         start={{ x: 0, y: 0 }}
@@ -236,7 +258,7 @@ export default function DetailPage() {
 
         {/* Box Office Section */}
         <View style={styles.boxOfficeSection}>
-          <Text style={styles.boxOfficeLabel}>BOX OFFICE</Text>
+          <Text style={styles.boxOfficeLabel}>| BOX OFFICE</Text>
           <Text style={styles.boxOfficeValue}>{movie.BoxOffice || 'Not Available'}</Text>
         </View>
 
@@ -260,13 +282,55 @@ export default function DetailPage() {
               <Text style={styles.scoreLabel}>METACRITIC</Text>
             </View>
           </View>
-            {/* Awards Section */}
-            <View style={styles.awardSection}>
-              <Text style={styles.awardText}>{movie.Awards}</Text>
-            </View>
+          {/* Awards Section */}
+          <View style={styles.awardSection}>
+            <Text style={styles.awardText}>{movie.Awards}</Text>
+          </View>
         </View>
       </LinearGradient>
-    </ScrollView>
+    );
+  };
+
+  // Render error state with retry that shows skeleton
+  const renderError = () => (
+    <View style={styles.errorContainer}>
+      <Ionicons name="alert-circle-outline" size={48} color="#e74c3c" />
+      <Text style={styles.errorText}>{error}</Text>
+      <TouchableOpacity style={styles.retryButton} onPress={handleReload}>
+        <Text style={styles.retryText}>Coba Lagi</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  // Show loading skeleton
+  if (loading) {
+    return <DetailSkeleton />;
+  }
+
+  return (
+    <View style={styles.container}>
+      {renderHeader()}
+      
+      <FlatList
+        data={[1]} // Dummy data array with one item
+        renderItem={() => (
+          <View style={styles.contentWrapper}>
+            {error ? renderError() : renderMovieContent()}
+          </View>
+        )}
+        keyExtractor={() => 'movie-detail'}
+        refreshControl={
+          <RefreshControl
+            refreshing={false}
+            onRefresh={onRefresh}
+            colors={['#f1c40f']} // Android
+            tintColor="#f1c40f" // iOS
+          />
+        }
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.flatListContent}
+      />
+    </View>
   );
 }
 
@@ -276,8 +340,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 16,
+  },
+  reloadButton: {
+    padding: 8,
+    backgroundColor: 'rgba(241, 196, 15, 0.1)',
+    borderRadius: 8,
+  },
+  skeletonContent: {
+    flex: 1,
+  },
+  flatListContent: {
+    flexGrow: 1,
+  },
+  contentWrapper: {
+    flex: 1,
+    minHeight: 600, // Ensure minimum height for content
   },
   contentContainer: {
     marginHorizontal: 16,
@@ -473,5 +555,29 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginVertical: 8,
     marginHorizontal: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#121212',
+    padding: 20,
+  },
+  errorText: {
+    color: '#e74c3c',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: '#f1c40f',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryText: {
+    color: '#000',
+    fontWeight: 'bold',
   },
 });

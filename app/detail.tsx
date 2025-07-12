@@ -2,18 +2,19 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   Animated,
+  FlatList,
   Image,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  FlatList,
-  RefreshControl,
-  ActivityIndicator
 } from 'react-native';
+
+const API_KEY = 'b45dad4f';
 
 // Custom Skeleton Components
 const SkeletonBox = ({ width, height, style = {} }: { width: string | number, height: number, style?: any }) => {
@@ -137,12 +138,8 @@ export default function DetailPage() {
 
   const fetchDetail = async () => {
     try {
-      setLoading(true);
-      setError(null);
-
-      const res = await axios.get(`http://www.omdbapi.com/?apikey=b45dad4f&i=${id}`);
-      
-      if (res.data.Response === 'True') {
+      const res = await axios.get(`http://www.omdbapi.com/?apikey=${API_KEY}&i=${id}`);
+      if (res.data.Response === "True") {
         setMovie(res.data);
       } else {
         setError(res.data.Error || 'Film tidak ditemukan');
@@ -258,7 +255,7 @@ export default function DetailPage() {
 
         {/* Box Office Section */}
         <View style={styles.boxOfficeSection}>
-          <Text style={styles.boxOfficeLabel}>| BOX OFFICE</Text>
+          <Text style={styles.boxOfficeLabel}>BOX OFFICE</Text>
           <Text style={styles.boxOfficeValue}>{movie.BoxOffice || 'Not Available'}</Text>
         </View>
 

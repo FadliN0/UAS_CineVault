@@ -90,7 +90,7 @@ export default function HomeScreen() {
 
     try {
       const response = await axios.get(
-        `http://www.omdbapi.com/?apikey=b45dad4f&s=${searchTerm}`
+        `https://www.omdbapi.com/?apikey=b45dad4f&s=${searchTerm}`
       );
 
       if (response.data.Response === 'True') {

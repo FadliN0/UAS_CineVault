@@ -138,7 +138,7 @@ export default function DetailPage() {
 
   const fetchDetail = async () => {
     try {
-      const res = await axios.get(`http://www.omdbapi.com/?apikey=${API_KEY}&i=${id}`);
+      const res = await axios.get(`https://www.omdbapi.com/?apikey=${API_KEY}&i=${id}`);
       if (res.data.Response === "True") {
         setMovie(res.data);
       } else {
